@@ -1,0 +1,7 @@
+# Build output (build.sh)
+build/
+*.c4z
+
+# snap-one/drivers-driverpackager, cloned on demand by build.sh
+tools/
+node_modules/

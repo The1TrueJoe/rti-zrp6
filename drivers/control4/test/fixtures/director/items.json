@@ -1,0 +1,62 @@
+[
+ {
+  "type": 8,
+  "typeName": "room",
+  "name": "Room",
+  "id": 14,
+  "parentId": 13,
+  "roomId": 14,
+  "roomName": "Room",
+  "proxy": "roomdevice"
+ },
+ {
+  "type": 8,
+  "typeName": "room",
+  "name": "Bathroom",
+  "id": 31,
+  "parentId": 13,
+  "roomId": 31,
+  "roomName": "Bathroom",
+  "proxy": "roomdevice"
+ },
+ {
+  "type": 7,
+  "typeName": "device",
+  "name": "Cable TV",
+  "id": 36,
+  "parentId": 14,
+  "roomId": 14,
+  "roomName": "Room",
+  "proxy": "rf_cable"
+ },
+ {
+  "type": 6,
+  "typeName": "device",
+  "name": "Hisense 55K610GWN IR",
+  "id": 49,
+  "parentId": 31,
+  "roomId": 31,
+  "roomName": "Bathroom",
+  "proxy": "tv"
+ },
+ {
+  "type": 7,
+  "typeName": "device",
+  "name": "Television",
+  "id": 50,
+  "parentId": 49,
+  "roomId": 31,
+  "roomName": "Bathroom",
+  "proxy": "tv"
+ },
+ {
+  "type": 7,
+  "typeName": "device",
+  "name": "Digital Media",
+  "id": 100002,
+  "parentId": 14,
+  "roomId": 14,
+  "roomName": "Room",
+  "proxy": "control4_digitalaudio"
+ }
+]

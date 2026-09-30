@@ -1,0 +1,35 @@
+{
+ "experiences": [
+  {
+   "room_id": 14,
+   "type": "watch",
+   "sources": {
+    "source": [
+     {
+      "id": 36
+     }
+    ]
+   }
+  },
+  {
+   "room_id": 14,
+   "type": "listen",
+   "sources": {
+    "source": [
+     {
+      "id": 100002
+     }
+    ]
+   }
+  },
+  {
+   "room_id": 31,
+   "type": "watch",
+   "sources": {
+    "source": {
+     "id": 50
+    }
+   }
+  }
+ ]
+}

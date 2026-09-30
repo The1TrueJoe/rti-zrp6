@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+/* Semantic tokens, not literal colours. A panel asks for `bg-panel` and
+   `text-ink`; which actual colour that is depends on the scheme below. Naming
+   them by ROLE is what lets one stylesheet serve both schemes — a panel written
+   against `bg-slate-900` can only ever be dark. */
+@theme inline {
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-edge: var(--edge);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+
+  --color-accent: var(--accent);
+  --color-live: var(--live);
+  --color-warm: var(--warm);
+  --color-alarm: var(--alarm);
+
+  --font-sans: Manrope, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Light is the base definition so every token has a value unconditionally.
+   A colour defined only inside a media query disappears wherever that query
+   does not match. */
+:root {
+  --ground: #eef1f5;
+  --panel: #ffffff;
+  --raised: #f7f9fb;
+  --edge: rgb(16 24 40 / 0.11);
+  --ink: #101828;
+  --muted: #5f6b7f;
+
+  --accent: oklch(0.55 0.15 245);
+  --live: oklch(0.62 0.16 150);
+  --warm: oklch(0.68 0.15 70);
+  --alarm: oklch(0.58 0.2 25);
+  color-scheme: light;
+}
+
+/* Dark is a GREY, not a black. Near-black reads as a terminal rather than a
+   product, and on a television true black crushes every border away. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ground: #212630;
+    --panel: #2a303b;
+    --raised: #333a47;
+    --edge: rgb(255 255 255 / 0.1);
+    --ink: #e8ecf3;
+    --muted: #99a3b5;
+
+    --accent: oklch(0.72 0.13 245);
+    --live: oklch(0.74 0.15 150);
+    --warm: oklch(0.79 0.14 70);
+    --alarm: oklch(0.7 0.17 25);
+    color-scheme: dark;
+  }
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

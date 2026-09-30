@@ -1,0 +1,36 @@
+[
+ {
+  "name": "Room",
+  "id": 14,
+  "siteName": "Home",
+  "siteId": 11,
+  "floorName": "Main",
+  "floorId": 13,
+  "buildingName": "House",
+  "buildingId": 12,
+  "roomHidden": false,
+  "tempHidden": true,
+  "type": 8,
+  "typeName": "room",
+  "parentId": 13,
+  "largeImage": "locations_lg\\room.gif",
+  "smallImage": "locations_sm\\room.gif"
+ },
+ {
+  "name": "Bathroom",
+  "id": 31,
+  "siteName": "Home",
+  "siteId": 11,
+  "floorName": "Main",
+  "floorId": 13,
+  "buildingName": "House",
+  "buildingId": 12,
+  "roomHidden": false,
+  "tempHidden": true,
+  "type": 8,
+  "typeName": "room",
+  "parentId": 13,
+  "largeImage": "locations_lg\\bathroom.gif",
+  "smallImage": "locations_sm\\bathroom.gif"
+ }
+]

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RTI ZRP-6 I/O</title>
+<style>
+  body { font: 13px/1.5 -apple-system, "Segoe UI", Arial, sans-serif; color: #1d2330; margin: 16px; max-width: 900px; }
+  h1 { font-size: 20px; } h2 { font-size: 15px; margin-top: 22px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+  th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #f0f2f5; }
+  code { font-family: Consolas, Menlo, monospace; background: #f0f2f5; padding: 0 3px; }
+  .note { background: #fff7e0; border: 1px solid #e8d49a; padding: 8px 10px; }
+</style>
+</head>
+<body>
+<h1>RTI ZRP-6 I/O</h1>
+<p>Turns an RTI ZRP-6 running the custom MQTT firmware into Control4 connections: seven IR outputs (each switchable to
+one-way serial), two RS-232 ports, three relays, three 12&nbsp;V triggers and three contact inputs. It also receives
+RTI 433&nbsp;MHz remote buttons and maps them to Control4 room actions and programming events.</p>
+
+<h2>Setup</h2>
+<ol>
+  <li><b>Connection Mode</b>: <i>Direct to box (P2P)</i>, the default, logs in to the box itself (below).
+    <i>Central broker</i> logs in to a house MQTT broker that bridges to the box: set <b>Broker Host</b>,
+    <b>Broker Port</b>, <b>Broker Username</b>, <b>Broker Password</b> and <b>Broker Base Topic</b> (the box and
+    discovery properties are hidden in that mode). The broker connects to the box as one MQTT client; give its
+    bridge a client ID starting with <code>!</code> (e.g. <code>remote_clientid !bridge-house-zrp6</code>, with
+    <code>topic zrp6/# both 0</code> and <code>try_private false</code>) so the box never bumps it. This driver's
+    own client ID is <code>!c4-zrp6-&lt;device id&gt;</code>.</li>
+  <li>The box announces itself over mDNS. <b>Box</b> lists the boxes heard and the first one is picked; with several,
+    pick yours. The driver remembers it by MAC and follows it when its DHCP address changes. <b>Box IP Address</b>
+    (an address, or a name like <code>zrp6-7A36.local</code>) overrides discovery; leave it empty to use the
+    discovered box. <b>Discovery Status</b> shows whether announcements are being heard; if none are, type the
+    address. Leave <b>MQTT Port</b> at 1883.</li>
+  <li>Set <b>Username</b> / <b>Password</b> to a user on the box (a new box has <code>admin</code> / <code>admin</code>).</li>
+  <li><b>Base Topic</b> must match the box (default <code>zrp6</code>, at most 11 characters).</li>
+  <li><b>Connection Status</b> shows <i>Connected</i> when the driver is logged in. The driver holds exactly one of the
+    box's four sockets and reconnects on its own with a growing delay; after a refused login it waits 30&nbsp;s.</li>
+</ol>
+
+<h2>Connections</h2>
+<table>
+  <tr><th>Connection</th><th>Class</th><th>Bind to</th></tr>
+  <tr><td>IR Out 1-7 (7 = HIGH OUT)</td><td>IR_OUT</td><td>IR device drivers. Codes are sent as Pronto hex.</td></tr>
+  <tr><td>IR <i>n</i> Serial Out (one-way)</td><td>RS_232</td><td>Appears instead of IR Out <i>n</i> when <b>IR <i>n</i> Mode</b> is <i>Serial</i>. Transmit only, 8N1.</td></tr>
+  <tr><td>RS-232 1-2</td><td>RS_232</td><td>Serial device drivers.</td></tr>
+  <tr><td>Relay 1-3</td><td>RELAY</td><td>Relay-controlled devices (screens, lifts, doors).</td></tr>
+  <tr><td>Trigger 1-3 (12 V)</td><td>RELAY</td><td>12 V trigger inputs; On = 12 V.</td></tr>
+  <tr><td>Contact 1-3</td><td>CONTACT_SENSOR</td><td>Contact sensor drivers.</td></tr>
+</table>
+
+<h2>IR ports as serial</h2>
+<p>Set <b>IR <i>n</i> Mode</b> to <i>Serial (one-way)</i> to switch a port. Its IR_OUT connection is replaced by an RS_232
+connection (re-make the Composer binding after switching), and the driver tells the box
+(<code>ir/&lt;n&gt;/mode/set</code>). <b>IR <i>n</i> Serial Baud</b> <i>Auto</i> uses the bound device driver's serial
+settings when the controller can read them (OS 4.2 and later), otherwise 9600. <b>Polarity</b>: RS-232 idles low, TTL idles high.</p>
+<p><b>The box is the source of truth for port settings.</b> They can be changed here in Properties, on the box's web
+page, or over MQTT. Whenever the box reports its settings (on every connect, and whenever they change), the driver adopts
+them: the IR and RS-232 properties and the IR_OUT / RS_232 connections change to match, and nothing is sent back. The
+driver sends a port setting to the box only when you edit it here (and the box has a different value), when a port set to
+<i>Auto</i> gets a bound device with different serial settings, or when you run <i>Resend Port Configuration</i>.
+<b>Box Port Settings</b> shows what the box last reported.</p>
+
+<h2>Control tab</h2>
+<p>The <b>Control</b> tab drives the box directly: relay and 12&nbsp;V trigger states with <i>On</i> / <i>Off</i> /
+<i>Pulse</i> (Pulse uses <b>Relay Pulse Time</b>), live contact states, each IR port's mode with a <i>Send</i> box (a
+Pronto or <code>nec &lt;addr&gt; &lt;cmd&gt;</code> code in IR mode, text with an escapes toggle in serial mode), and each
+RS-232 port's settings with a <i>Send</i> box and the last data received. The header shows the connection, the address
+in use, the connection mode and the box's firmware.</p>
+
+<h2>Remote buttons</h2>
+<p>Remote buttons are managed only on this driver's <b>Remote Buttons</b> tab (next to Properties). Press <i>Learn a
+button</i>, press a button on the RTI remote, name it, and add actions: pick a room, then one of that room's Control4
+commands as Director lists them (with inputs for its parameters), <i>Select source...</i> (the room's Watch and Listen
+sources) or <i>Programming event only</i>. A START/STOP pair such as volume up shows once as "(tap)" and sends both.
+Each remote gets its own list, told apart by the code's preamble; the bench remote's codes have none.
+<i>Recent presses</i> lists the last codes received, with <i>Add</i> for any not learned yet. Edit, Test and Delete work
+per button, and <i>Rename remote</i> names a remote.</p>
+<p>Every press fires <i>Remote Button Pressed</i>, plus <i>Button: &lt;remote&gt; / &lt;name&gt;</i> for a learned
+button or <i>Unmapped Remote Button Pressed</i> for one that is not. Variables <code>LAST_REMOTE_CODE</code>,
+<code>LAST_REMOTE_BUTTON</code> and <code>LAST_REMOTE_NAME</code> hold the last press.</p>
+
+<h2>Programming</h2>
+<table>
+  <tr><th>Commands</th><td>Set Output (relay/trigger on, off, toggle, pulse), Send IR, Send Serial (<code>\r \n \t \\ \xHH</code> escapes), Press Remote Button</td></tr>
+  <tr><th>Events</th><td>Remote Button Pressed, Unmapped Remote Button Pressed, one per learned button, Connected, Disconnected, RS-232 1/2 Data Received</td></tr>
+  <tr><th>Variables</th><td>CONNECTED, LAST_REMOTE_CODE, LAST_REMOTE_BUTTON, LAST_REMOTE_NAME, SERIAL_1_RX, SERIAL_2_RX</td></tr>
+</table>
+
+<h2>Notes</h2>
+<p class="note">Serial data received on RS-232 1/2 is available to programming (variable and event). Passing it back to a
+bound two-way serial device driver is not implemented. If a bound device's commands do not go out, turn on
+<b>Debug Mode</b> and check <b>Last Unhandled Proxy Command</b>.</p>
+</body>
+</html>

@@ -1,0 +1,80 @@
+name: Control4 driver
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'drivers/control4/**'
+      - '.github/workflows/control4-driver.yml'
+  pull_request:
+    paths:
+      - 'drivers/control4/**'
+      - '.github/workflows/control4-driver.yml'
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the driver version is the commit count
+
+      - name: Set up Node (builds the Remote Buttons tab with esbuild)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: drivers/control4/package-lock.json
+
+      - name: Install Lua, LuaJIT and mosquitto
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.3 luajit mosquitto mosquitto-clients
+          sudo ln -sf /usr/bin/luac5.3 /usr/local/bin/luac
+          sudo ln -sf /usr/bin/lua5.3 /usr/local/bin/lua
+
+      # Concatenates src/ into driver.lua, runs luac -p and luajit on it,
+      # builds the Remote Buttons and Control tabs from driver/ui/ (npm ci +
+      # esbuild) into www/html/, stamps version/date into driver.xml.
+      - name: Stage driver
+        run: drivers/control4/build.sh --stage
+
+      # Unit tests under Lua 5.3 and LuaJIT, the Remote Buttons and Control
+      # tab pages against the driver (node), and the MQTT client against a
+      # private mosquitto on 127.0.0.1.
+      - name: Test
+        run: drivers/control4/test/run.sh
+
+      - name: Package rti_zrp6.c4z
+        uses: snap-one/drivers-driverpackager@v2-rc4
+        with:
+          projectDir: './drivers/control4/build/stage'
+          c4zproj: 'rti_zrp6.c4zproj'
+          outputDir: '..' # relative to projectDir -> drivers/control4/build
+
+      - name: Check the package holds the Remote Buttons and Control tabs
+        run: |
+          unzip -l drivers/control4/build/rti_zrp6.c4z
+          for page in index control; do
+            unzip -l drivers/control4/build/rti_zrp6.c4z | grep -q "www/html/$page.html"
+            unzip -p drivers/control4/build/rti_zrp6.c4z driver.xml | grep -q "file=\"html/$page.html\""
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rti_zrp6
+          path: drivers/control4/build/rti_zrp6.c4z
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" drivers/control4/build/rti_zrp6.c4z --clobber

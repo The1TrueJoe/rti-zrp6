@@ -1,0 +1,65 @@
+[
+ {
+  "command": "ROOM_OFF",
+  "display": "Room Off",
+  "params": []
+ },
+ {
+  "command": "START_VOL_UP",
+  "display": "Volume Up",
+  "params": []
+ },
+ {
+  "command": "STOP_VOL_UP",
+  "display": "Stop Volume Up",
+  "params": []
+ },
+ {
+  "command": "START_VOL_DOWN",
+  "display": "Volume Down",
+  "params": []
+ },
+ {
+  "command": "STOP_VOL_DOWN",
+  "display": "Stop Volume Down",
+  "params": []
+ },
+ {
+  "command": "MUTE_TOGGLE",
+  "display": "Mute Toggle",
+  "params": []
+ },
+ {
+  "command": "SET_VOLUME_LEVEL",
+  "display": "Set Volume Level",
+  "params": [
+   {
+    "name": "LEVEL",
+    "type": "RANGED_INTEGER",
+    "minimum": 0,
+    "maximum": 100
+   }
+  ]
+ },
+ {
+  "command": "SELECT_VIDEO_DEVICE",
+  "display": "Select Video Device",
+  "params": [
+   {
+    "name": "deviceid",
+    "type": "LIST",
+    "values": [
+     {
+      "id": 36,
+      "name": "Cable TV"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "command": "PLAYPAUSE",
+  "display": "Play/Pause",
+  "params": []
+ }
+]

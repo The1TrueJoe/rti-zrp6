@@ -1,0 +1,38 @@
+# Everything from the reverse-engineering phase: one-shot probe generators,
+# flash images, JTAG dumps, working notes. Kept on disk because it is how the
+# hardware was worked out, but it is not part of the system.
+research/
+
+# Build output
+build/
+dist/
+*.ihx
+*.rel
+*.lst
+*.rst
+*.sym
+*.map
+*.mem
+*.asm
+*.bin
+*.elf
+
+# Node
+node_modules/
+.vite/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local editor / OS noise
+.DS_Store
+*.swp
+
+.claude/
+# Control4's driverpackager: cloned by drivers/control4/build.sh, their licence
+# forbids redistributing it
+drivers/control4/tools/driverpackager/

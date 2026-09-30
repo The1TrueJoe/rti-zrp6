@@ -1,0 +1,154 @@
+diff --git a/source/jamdefs.h b/source/jamdefs.h
+index 74ccfcf..3705f45 100644
+--- a/source/jamdefs.h
++++ b/source/jamdefs.h
+@@ -50,7 +50,7 @@
+ #define JAMC_ARRAY_CACHE_SIZE 1024
+ 
+ /* character length limits */
+-#define JAMC_MAX_STATEMENT_LENGTH ((const) jam_statement_buffer_size)
++#define JAMC_MAX_STATEMENT_LENGTH ((const int) jam_statement_buffer_size)
+ #define JAMC_MAX_NAME_LENGTH 32
+ #define JAMC_MAX_INSTR_LENGTH 10
+ 
+diff --git a/source/jamport.h b/source/jamport.h
+index 4dc4846..8f2ad8a 100644
+--- a/source/jamport.h
++++ b/source/jamport.h
+@@ -35,6 +35,7 @@
+ #define EMBEDDED 5
+ #define WINDOWS_INPOUT32 6
+ #define LINUX_RPI 7
++#define LINUX_RBB 8
+ 
+ /* change this line to build a different port */
+ #ifndef PORT
+diff --git a/source/jamstub.c b/source/jamstub.c
+index 37a2da3..535422e 100644
+--- a/source/jamstub.c
++++ b/source/jamstub.c
+@@ -60,7 +60,11 @@ typedef unsigned long DWORD;
+ 	#define N_STATIC_MEMORY_BYTES (N_STATIC_MEMORY_KBYTES * 1024)
+ 	#define POINTER_ALIGNMENT sizeof(DWORD)
+ #else /* USE_STATIC_MEMORY */
+-	#include <malloc.h>
++	#if defined(__APPLE__)
++#include <stdlib.h>
++#else
++#include <malloc.h>
++#endif
+ 	#define POINTER_ALIGNMENT sizeof(BYTE)
+ #endif /* USE_STATIC_MEMORY */
+ #include <time.h>
+@@ -91,6 +95,79 @@ typedef unsigned long DWORD;
+ 
+ #include "jamexprt.h"
+ 
++#if PORT == LINUX_RBB
++/* ---------------------------------------------------------------------------
++ * remote_bitbang backend.
++ *
++ * Speaks OpenOCD's remote_bitbang protocol over TCP to tools/rbb_bridge.py,
++ * which forwards to the NUCLEO JTAG adaptor.  One character per action:
++ *   '0'+((tck<<2)|(tms<<1)|tdi)   drive the three pins
++ *   'R'                            sample TDO, replies with '0' or '1'
++ *   'Q'                            quit
++ * Writes are buffered and flushed only when a TDO sample is needed -- the link
++ * is a serial port, and one round trip per TCK would be unusably slow.
++ * ------------------------------------------------------------------------- */
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <netinet/tcp.h>
++#include <arpa/inet.h>
++
++static int   rbb_sock = -1;
++static char  rbb_buf[8192];
++static int   rbb_len = 0;
++
++static void rbb_flush(void)
++{
++	if (rbb_len > 0) { (void) write(rbb_sock, rbb_buf, rbb_len); rbb_len = 0; }
++}
++
++static void rbb_put(char c)
++{
++	if (rbb_len >= (int) sizeof(rbb_buf)) rbb_flush();
++	rbb_buf[rbb_len++] = c;
++}
++
++static int rbb_open(const char *host, int port)
++{
++	struct sockaddr_in a;
++	int one = 1;
++	rbb_sock = socket(AF_INET, SOCK_STREAM, 0);
++	if (rbb_sock < 0) return -1;
++	memset(&a, 0, sizeof(a));
++	a.sin_family = AF_INET;
++	a.sin_port = htons((unsigned short) port);
++	a.sin_addr.s_addr = inet_addr(host);
++	if (connect(rbb_sock, (struct sockaddr *) &a, sizeof(a)) < 0) {
++		close(rbb_sock); rbb_sock = -1; return -1;
++	}
++	setsockopt(rbb_sock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
++	return 0;
++}
++
++static void rbb_close(void)
++{
++	if (rbb_sock >= 0) { rbb_put('Q'); rbb_flush(); close(rbb_sock); rbb_sock = -1; }
++}
++
++static int rbb_io(int tms, int tdi, int read_tdo)
++{
++	int tdo = 0;
++	rbb_put((char) ('0' + ((tms ? 2 : 0) | (tdi ? 1 : 0))));   /* TCK low  */
++	if (read_tdo) {
++		char c = 0;
++		int n;
++		rbb_put('R');
++		rbb_flush();
++		do { n = read(rbb_sock, &c, 1); } while (n < 0);
++		tdo = (c == '1') ? 1 : 0;
++	}
++	rbb_put((char) ('0' + 4 + ((tms ? 2 : 0) | (tdi ? 1 : 0)))); /* TCK high */
++	rbb_put((char) ('0' + ((tms ? 2 : 0) | (tdi ? 1 : 0))));     /* TCK low  */
++	return tdo;
++}
++#endif /* LINUX_RBB */
++
++
+ #if PORT == WINDOWS
+ #define PGDC_IOCTL_GET_DEVICE_INFO_PP 0x00166A00L
+ #define PGDC_IOCTL_READ_PORT_PP       0x00166A04L
+@@ -370,6 +447,8 @@ int jam_jtag_io(int tms, int tdi, int read_tdo)
+ 		write_byteblaster(0, data | (alternative_cable_l ? 0x02 : (alternative_cable_x ? 0x02: 0x01)));
+ 
+ 		write_byteblaster(0, data);
++#elif PORT == LINUX_RBB
++		tdo = rbb_io(tms, tdi, read_tdo);
+ #elif PORT == LINUX_RPI
+ 		// set TDI and TMS to correct value
+ 		if(tdi)
+@@ -1723,6 +1802,11 @@ void get_lpt_addresses_from_registry()
+ 
+ void initialize_jtag_hardware()
+ {
++#if PORT == LINUX_RBB
++	if (rbb_open("127.0.0.1", 4242) != 0)
++		fprintf(stderr, "Error: cannot reach remote_bitbang bridge on 127.0.0.1:4242\n");
++	return;
++#endif
+ 	if (specified_com_port)
+ 	{
+ 		com_port = open(serial_port_name, O_RDWR);
+@@ -1857,6 +1941,10 @@ void initialize_jtag_hardware()
+ 
+ void close_jtag_hardware()
+ {
++#if PORT == LINUX_RBB
++	rbb_close();
++	return;
++#endif
+ 	if (specified_com_port)
+ 	{
+ 		if (com_port != -1) close(com_port);

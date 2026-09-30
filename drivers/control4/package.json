@@ -1,0 +1,12 @@
+{
+  "name": "rti-zrp6-control4-driver",
+  "private": true,
+  "description": "Build tooling for the Remote Buttons tab of the RTI ZRP-6 Control4 driver",
+  "scripts": {
+    "build:ui": "node driver/ui/build.mjs build/ui",
+    "watch:ui": "node driver/ui/build.mjs build/ui --watch"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

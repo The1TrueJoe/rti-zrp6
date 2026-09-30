@@ -1,0 +1,749 @@
+<devicedata>
+	<copyright>Copyright 2026 Joseph Telaak. All rights reserved.</copyright>
+	<manufacturer>RTI</manufacturer>
+	<name>RTI ZRP-6 I/O</name>
+	<model>ZRP-6</model>
+	<creator>Joseph Telaak</creator>
+	<created>09/29/2026 00:00</created>
+	<modified>09/29/2026 00:00</modified>
+	<version>1</version>
+	<control>lua_gen</control>
+	<driver>DriverWorks</driver>
+	<minimum_os_version>3.3.0</minimum_os_version>
+	<composer_categories>
+		<category>Utility</category>
+	</composer_categories>
+	<config>
+		<script file="driver.lua" jit="1"/>
+		<documentation file="www/documentation.html"/>
+		<properties>
+			<property>
+				<name>Status</name>
+				<type>LABEL</type>
+				<default>Status</default>
+			</property>
+			<property>
+				<name>Driver Version</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Connection Status</name>
+				<type>STRING</type>
+				<default>Not configured</default>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Box Status</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Box Firmware</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Box Port Settings</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Last Remote Code</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Last Error</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Last Unhandled Proxy Command</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Connection</name>
+				<type>LABEL</type>
+				<default>Connection</default>
+			</property>
+			<property>
+				<name>Connection Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>Direct to box (P2P)</item>
+					<item>Central broker</item>
+				</items>
+				<default>Direct to box (P2P)</default>
+				<readonly>false</readonly>
+				<tooltip>Direct to box: the driver logs in to the box&apos;s own MQTT broker (found by mDNS, or Box IP Address). Central broker: the driver logs in to a house MQTT broker that bridges to the box (see the driver documentation).</tooltip>
+			</property>
+			<property>
+				<name>Broker Host</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>false</readonly>
+				<tooltip>Address or name of the house MQTT broker.</tooltip>
+			</property>
+			<property>
+				<name>Broker Port</name>
+				<type>RANGED_INTEGER</type>
+				<minimum>1</minimum>
+				<maximum>65535</maximum>
+				<default>1883</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>Broker Username</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>Broker Password</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>false</readonly>
+				<password>true</password>
+			</property>
+			<property>
+				<name>Broker Base Topic</name>
+				<type>STRING</type>
+				<default>zrp6</default>
+				<readonly>false</readonly>
+				<tooltip>The box&apos;s topics as the broker carries them (the bridge maps zrp6/# unchanged).</tooltip>
+			</property>
+			<property>
+				<name>Box</name>
+				<type>DYNAMIC_LIST</type>
+				<readonly>false</readonly>
+				<tooltip>ZRP-6 boxes heard on the network (mDNS). The driver remembers the one picked here by its MAC and follows its address when it changes. The first box heard is picked automatically if none is.</tooltip>
+			</property>
+			<property>
+				<name>Selected Box</name>
+				<type>STRING</type>
+				<default>None chosen</default>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Box IP Address</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>false</readonly>
+				<tooltip>Leave empty to use the discovered box. Anything typed here (an IP address, or a name such as zrp6-7A36.local) overrides discovery.</tooltip>
+			</property>
+			<property>
+				<name>Box Address In Use</name>
+				<type>STRING</type>
+				<default>none yet</default>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>Discovery Listener</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto</item>
+					<item>UDP server</item>
+					<item>Network binding</item>
+					<item>Off</item>
+				</items>
+				<default>Auto</default>
+				<readonly>false</readonly>
+				<tooltip>How the driver listens for the box's mDNS announcements on 224.0.0.251:5353. Auto tries a UDP server on port 5353, then a UDP network binding, switching when one hears nothing for 3 minutes.</tooltip>
+			</property>
+			<property>
+				<name>Discovery Status</name>
+				<type>STRING</type>
+				<default/>
+				<readonly>true</readonly>
+			</property>
+			<property>
+				<name>MQTT Port</name>
+				<type>RANGED_INTEGER</type>
+				<minimum>1</minimum>
+				<maximum>65535</maximum>
+				<default>1883</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>Username</name>
+				<type>STRING</type>
+				<default>admin</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>Password</name>
+				<type>STRING</type>
+				<default>admin</default>
+				<readonly>false</readonly>
+				<password>true</password>
+			</property>
+			<property>
+				<name>Base Topic</name>
+				<type>STRING</type>
+				<default>zrp6</default>
+				<readonly>false</readonly>
+				<tooltip>Topic prefix configured on the box. At most 11 characters: the box keeps topics of up to 31 characters.</tooltip>
+			</property>
+			<property>
+				<name>Keepalive (s)</name>
+				<type>RANGED_INTEGER</type>
+				<minimum>10</minimum>
+				<maximum>60</maximum>
+				<default>30</default>
+				<readonly>false</readonly>
+				<tooltip>The box drops an MQTT client that is silent for 90 s.</tooltip>
+			</property>
+			<property>
+				<name>Debug Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>Off</item>
+					<item>On</item>
+				</items>
+				<default>Off</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR Ports</name>
+				<type>LABEL</type>
+				<default>IR Ports (switch any port to one-way serial)</default>
+			</property>
+			<property>
+				<name>IR 1 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR offers an IR_OUT connection; Serial offers an RS_232 connection (transmit only, 8N1).</tooltip>
+			</property>
+			<property>
+				<name>IR 1 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 1 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR 2 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR offers an IR_OUT connection; Serial offers an RS_232 connection (transmit only, 8N1).</tooltip>
+			</property>
+			<property>
+				<name>IR 2 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 2 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR 3 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR offers an IR_OUT connection; Serial offers an RS_232 connection (transmit only, 8N1).</tooltip>
+			</property>
+			<property>
+				<name>IR 3 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 3 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR 4 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR offers an IR_OUT connection; Serial offers an RS_232 connection (transmit only, 8N1).</tooltip>
+			</property>
+			<property>
+				<name>IR 4 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 4 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR 5 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR offers an IR_OUT connection; Serial offers an RS_232 connection (transmit only, 8N1).</tooltip>
+			</property>
+			<property>
+				<name>IR 5 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 5 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR 6 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR offers an IR_OUT connection; Serial offers an RS_232 connection (transmit only, 8N1).</tooltip>
+			</property>
+			<property>
+				<name>IR 6 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 6 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>IR 7 Mode</name>
+				<type>LIST</type>
+				<items>
+					<item>IR</item>
+					<item>Serial (one-way)</item>
+				</items>
+				<default>IR</default>
+				<readonly>false</readonly>
+				<tooltip>IR 7 is HIGH OUT, the high-current output.</tooltip>
+			</property>
+			<property>
+				<name>IR 7 Serial Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+				<tooltip>Auto uses the bound device driver's serial settings when the controller can read them (OS 4.2+), else 9600.</tooltip>
+			</property>
+			<property>
+				<name>IR 7 Serial Polarity</name>
+				<type>LIST</type>
+				<items>
+					<item>RS-232 (idle low)</item>
+					<item>TTL (idle high)</item>
+				</items>
+				<default>RS-232 (idle low)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>RS-232 Ports</name>
+				<type>LABEL</type>
+				<default>RS-232 Ports</default>
+			</property>
+			<property>
+				<name>RS-232 1 Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>RS-232 1 Format</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>8N1</item>
+					<item>8E1</item>
+					<item>8O1</item>
+					<item>7E1</item>
+					<item>7O1</item>
+					<item>8N2</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>RS-232 2 Baud</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>1200</item>
+					<item>2400</item>
+					<item>4800</item>
+					<item>9600</item>
+					<item>14400</item>
+					<item>19200</item>
+					<item>38400</item>
+					<item>57600</item>
+					<item>115200</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>RS-232 2 Format</name>
+				<type>LIST</type>
+				<items>
+					<item>Auto (bound device)</item>
+					<item>8N1</item>
+					<item>8E1</item>
+					<item>8O1</item>
+					<item>7E1</item>
+					<item>7O1</item>
+					<item>8N2</item>
+				</items>
+				<default>Auto (bound device)</default>
+				<readonly>false</readonly>
+			</property>
+			<property>
+				<name>Relays and Triggers</name>
+				<type>LABEL</type>
+				<default>Relays and 12 V Triggers</default>
+			</property>
+			<property>
+				<name>Relay Pulse Time (ms)</name>
+				<type>RANGED_INTEGER</type>
+				<minimum>50</minimum>
+				<maximum>60000</maximum>
+				<default>500</default>
+				<readonly>false</readonly>
+				<tooltip>Used for TRIGGER (pulse) when the caller gives no time.</tooltip>
+			</property>
+		</properties>
+		<tabs>
+			<tab name="Remote Buttons" file="html/index.html"/>
+			<tab name="Control" file="html/control.html"/>
+		</tabs>
+		<commands>
+			<command>
+				<name>Set Output</name>
+				<description>Set PARAM1 PARAM2 on NAME</description>
+				<params>
+					<param>
+						<name>Output</name>
+						<type>LIST</type>
+						<items>
+							<item>Relay 1</item>
+							<item>Relay 2</item>
+							<item>Relay 3</item>
+							<item>Trigger 1</item>
+							<item>Trigger 2</item>
+							<item>Trigger 3</item>
+						</items>
+					</param>
+					<param>
+						<name>State</name>
+						<type>LIST</type>
+						<items>
+							<item>On</item>
+							<item>Off</item>
+							<item>Toggle</item>
+							<item>Pulse</item>
+						</items>
+					</param>
+					<param>
+						<name>Time (ms)</name>
+						<type>RANGED_INTEGER</type>
+						<minimum>0</minimum>
+						<maximum>60000</maximum>
+					</param>
+				</params>
+			</command>
+			<command>
+				<name>Send IR</name>
+				<description>Send IR code PARAM2 on port PARAM1 of NAME</description>
+				<params>
+					<param>
+						<name>Port</name>
+						<type>RANGED_INTEGER</type>
+						<minimum>1</minimum>
+						<maximum>7</maximum>
+					</param>
+					<param>
+						<name>Code</name>
+						<type>STRING</type>
+					</param>
+					<param>
+						<name>Repeats</name>
+						<type>RANGED_INTEGER</type>
+						<minimum>1</minimum>
+						<maximum>10</maximum>
+					</param>
+				</params>
+			</command>
+			<command>
+				<name>Send Serial</name>
+				<description>Send PARAM2 out of PARAM1 on NAME</description>
+				<params>
+					<param>
+						<name>Port</name>
+						<type>LIST</type>
+						<items>
+							<item>RS-232 1</item>
+							<item>RS-232 2</item>
+							<item>IR 1</item>
+							<item>IR 2</item>
+							<item>IR 3</item>
+							<item>IR 4</item>
+							<item>IR 5</item>
+							<item>IR 6</item>
+							<item>IR 7</item>
+						</items>
+					</param>
+					<param>
+						<name>Data</name>
+						<type>STRING</type>
+					</param>
+				</params>
+			</command>
+			<command>
+				<name>Press Remote Button</name>
+				<description>Run remote button PARAM1 on NAME</description>
+				<params>
+					<param>
+						<name>Button</name>
+						<type>CUSTOM_SELECT:GetRemoteButtonList</type>
+					</param>
+				</params>
+			</command>
+		</commands>
+		<actions>
+			<action>
+				<name>Reconnect</name>
+				<command>RECONNECT</command>
+			</action>
+			<action>
+				<name>Resend Port Configuration</name>
+				<command>RESEND_PORT_CONFIGURATION</command>
+			</action>
+			<action>
+				<name>Forget Selected Box</name>
+				<command>FORGET_SELECTED_BOX</command>
+			</action>
+		</actions>
+	</config>
+	<events>
+		<event>
+			<id>1</id>
+			<name>Remote Button Pressed</name>
+			<description>When any remote button is pressed on NAME</description>
+		</event>
+		<event>
+			<id>2</id>
+			<name>Unmapped Remote Button Pressed</name>
+			<description>When a remote button that has not been learned is pressed on NAME</description>
+		</event>
+		<event>
+			<id>3</id>
+			<name>Connected</name>
+			<description>When NAME connects to the ZRP-6</description>
+		</event>
+		<event>
+			<id>4</id>
+			<name>Disconnected</name>
+			<description>When NAME loses the ZRP-6</description>
+		</event>
+		<event>
+			<id>5</id>
+			<name>RS-232 1 Data Received</name>
+			<description>When NAME receives data on RS-232 1</description>
+		</event>
+		<event>
+			<id>6</id>
+			<name>RS-232 2 Data Received</name>
+			<description>When NAME receives data on RS-232 2</description>
+		</event>
+	</events>
+	<connections>
+		<!-- IR ports 1-7 are dynamic (101-107 IR_OUT, 111-117 RS_232) so each
+		     can switch between IR and one-way serial; see src/06_io.lua. -->
+		<connection><id>201</id><facing>6</facing><connectionname>RS-232 1</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RS_232</classname></class></classes></connection>
+		<connection><id>202</id><facing>6</facing><connectionname>RS-232 2</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RS_232</classname></class></classes></connection>
+		<connection><id>301</id><facing>6</facing><connectionname>Relay 1</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RELAY</classname></class></classes></connection>
+		<connection><id>302</id><facing>6</facing><connectionname>Relay 2</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RELAY</classname></class></classes></connection>
+		<connection><id>303</id><facing>6</facing><connectionname>Relay 3</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RELAY</classname></class></classes></connection>
+		<connection><id>311</id><facing>6</facing><connectionname>Trigger 1 (12 V)</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RELAY</classname></class></classes></connection>
+		<connection><id>312</id><facing>6</facing><connectionname>Trigger 2 (12 V)</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RELAY</classname></class></classes></connection>
+		<connection><id>313</id><facing>6</facing><connectionname>Trigger 3 (12 V)</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>RELAY</classname></class></classes></connection>
+		<connection><id>401</id><facing>6</facing><connectionname>Contact 1</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>CONTACT_SENSOR</classname></class></classes></connection>
+		<connection><id>402</id><facing>6</facing><connectionname>Contact 2</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>CONTACT_SENSOR</classname></class></classes></connection>
+		<connection><id>403</id><facing>6</facing><connectionname>Contact 3</connectionname><type>1</type><consumer>False</consumer><audiosource>False</audiosource><videosource>False</videosource><linelevel>True</linelevel><classes><class><classname>CONTACT_SENSOR</classname></class></classes></connection>
+	</connections>
+	<combo>true</combo>
+	<proxies>
+		<proxy>rti_zrp6</proxy>
+	</proxies>
+</devicedata>

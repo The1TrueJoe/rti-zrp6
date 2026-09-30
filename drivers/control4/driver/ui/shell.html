@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remote Buttons</title>
+<!-- Built by driver/ui/build.mjs from driver/ui/: edit the sources there, not this file. -->
+<style>/*STYLE*/</style>
+</head>
+<body>
+<header>
+  <h1>Remote Buttons</h1>
+  <span class="dot" id="dot"></span>
+  <span id="status">Loading...</span>
+  <button class="primary" id="learnBtn">Learn a button</button>
+</header>
+<div id="banner"></div>
+<main>
+  <aside>
+    <div class="card">
+      <h2>Remotes</h2>
+      <div id="remotes"></div>
+    </div>
+    <div class="card">
+      <h2>Recent presses</h2>
+      <ul class="recent" id="recent"></ul>
+    </div>
+  </aside>
+  <section class="main">
+    <div class="card">
+      <h2><span id="listTitle">Buttons</span><button id="renameRemote" style="display:none">Rename remote</button></h2>
+      <table>
+        <thead><tr><th>Button</th><th>Code</th><th>Does</th><th></th></tr></thead>
+        <tbody id="buttons"></tbody>
+      </table>
+      <div class="empty" id="noButtons">No buttons yet. Press "Learn a button", then press a button on the RTI remote.</div>
+    </div>
+    <p class="muted">Every learned button also fires the programming events "Remote Button Pressed" and its own
+      "Button: remote / name" event on this driver, so it can drive anything in Composer programming.</p>
+  </section>
+</main>
+
+<div class="overlay" id="learnDlg"><div class="dlg">
+  <div class="dlg-head">Learn a button</div>
+  <div class="dlg-body">
+    <div id="learnStart">
+      <div class="field"><label for="learnName">Name for the button (optional)</label><input id="learnName" placeholder="e.g. Power" class="wide"></div>
+    </div>
+    <div id="learnWait" style="display:none">
+      <div class="big">Press a button on the RTI remote</div>
+      <div class="center muted" id="learnCountdown"></div>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button id="learnCancel">Cancel</button>
+    <button class="primary" id="learnGo">Start</button>
+  </div>
+</div></div>
+
+<div class="overlay" id="editDlg"><div class="dlg">
+  <div class="dlg-head" id="editTitle">Button</div>
+  <div class="dlg-body">
+    <div class="field"><label for="editName">Button name</label><input id="editName" class="wide"></div>
+    <div class="field"><label>Code</label><div class="code" id="editCode"></div></div>
+    <div class="field">
+      <label>Actions (run in order when the button is pressed)</label>
+      <div id="editActions"></div>
+      <div><button id="addAction">Add action</button> <button id="refreshRooms">Reload rooms</button></div>
+      <div class="muted" id="catalogNote"></div>
+    </div>
+    <div class="err" id="editErr"></div>
+  </div>
+  <div class="dlg-foot">
+    <button id="editCancel">Cancel</button>
+    <button class="primary" id="editSave">Save</button>
+  </div>
+</div></div>
+<script>/*SCRIPT*/</script>
+</body>
+</html>
